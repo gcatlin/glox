@@ -1,9 +1,11 @@
-package token
+package main
 
-type Token int
+// http://www.craftinginterpreters.com/scanning.html#lexeme-type
+
+type TokenKind int
 
 const (
-	ILLEGAL Token = iota
+	ILLEGAL TokenKind = iota
 	EOF
 
 	// Single-character tokens
@@ -52,3 +54,15 @@ const (
 	VAR
 	WHILE
 )
+
+type Token struct {
+	kind    TokenKind
+	lexeme  []byte      // string?
+	literal interface{} // use an interface?
+	line    int
+}
+
+func (t Token) String() string {
+	// return t.kind + " " + t.lexeme + " " + t.literal
+	return string(t.lexeme)
+}
