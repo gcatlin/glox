@@ -2,11 +2,13 @@ package main
 
 // http://www.craftinginterpreters.com/scanning.html#lexeme-type
 
+type Literal interface{}
+
 type TokenKind int
 
 const (
+	// EOF = -(iota+1)
 	ILLEGAL TokenKind = iota
-	EOF
 
 	// Single-character tokens
 	LEFT_PAREN  // (
@@ -53,16 +55,38 @@ const (
 	TRUE
 	VAR
 	WHILE
+
+	EOF
+	TOKEN_COUNT
 )
 
 type Token struct {
 	kind    TokenKind
-	lexeme  []byte      // string?
-	literal interface{} // use an interface?
+	lexeme  []byte
+	literal Literal
 	line    int
 }
 
 func (t Token) String() string {
 	// return t.kind + " " + t.lexeme + " " + t.literal
 	return string(t.lexeme)
+}
+
+var Keywords = map[string]TokenKind{
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
 }

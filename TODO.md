@@ -1,0 +1,5 @@
+ - pass []Token to NewLexer?
+ - mixed case token constants
+ - lexer EOF bool?
+ - Fix printing
+ - fix UTF-8 support

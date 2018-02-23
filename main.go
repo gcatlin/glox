@@ -8,53 +8,59 @@ import (
 	"os"
 )
 
-func run(source []byte) {
-	lexer := NewLexer(source)
-	tokens := lexer.readTokens()
+const (
+	ErrCompile = iota + 65
+)
 
-	fmt.Print(">>> ")
+var hadError = false
+
+func report(line int, where string, message string) {
+	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
+	hadError = true
+}
+
+func reportError(line int, message string) {
+	report(line, "", message)
+}
+
+func run(source []byte) {
+	tokens := NewScanner(source).ScanAll()
 	for _, token := range tokens {
-		fmt.Print(".", token)
+		if token.kind != EOF {
+			fmt.Printf("%v\n", token)
+		}
 	}
 }
 
 func runFile(path string) {
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "cannot read file", err)
-	}
+	bytes, _ := ioutil.ReadFile(path)
 	run(bytes)
-
-	if hadError {
-		os.Exit(65) // TODO error constants
-	}
 }
 
-func runPrompt() {
+func repl() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print("> ")
+		fmt.Print(ANSI_BOLD + "glox> " + ANSI_RESET)
 		bytes, err := reader.ReadBytes('\n')
-		fmt.Println(">>>", string(bytes))
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("Bye!")
-				break
-			}
-			fmt.Fprintln(os.Stderr, "cannot read input:", err)
+		if err == io.EOF {
+			fmt.Println(ANSI_RESET)
+			break
 		}
+
 		run(bytes)
+		// if bytes[0] != '\n' {
+		// 	run(bytes)
+		// }
 		hadError = false
 	}
 }
 
 func main() {
-	argv := os.Args[1:]
-	argc := len(argv)
-	if argc == 0 {
-		runPrompt()
-	} else if argc == 1 {
-		runFile(argv[0])
+	args := os.Args[1:]
+	if len(args) == 0 {
+		repl()
+	} else if len(args) == 1 {
+		runFile(args[0])
 	} else {
 		fmt.Println("Usage: glox [script]")
 	}
