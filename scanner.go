@@ -65,6 +65,9 @@ func (s *Scanner) match(expected rune) bool {
 func (s *Scanner) Next() rune {
 	ch := s.readRune(s.current)
 	s.current++ // slice s.source?
+	if ch == '\n' {
+		s.line++
+	}
 	return ch
 }
 
@@ -127,9 +130,8 @@ func (s *Scanner) Scan() {
 	case ' ':
 	case '\r':
 	case '\t':
-		break
 	case '\n':
-		s.line++
+		break
 	case '"':
 		s.scanString()
 	default:
@@ -155,9 +157,8 @@ func (s *Scanner) ScanAll() []Token {
 }
 
 func (s *Scanner) scanComment() {
-	for s.Peek() != '\n' && !s.isAtEnd() {
-		s.Next()
-	}
+	s.scanUntil('\n')
+	s.addToken(COMMENT)
 }
 
 func (s *Scanner) scanIdentifier() {
@@ -194,24 +195,22 @@ func (s *Scanner) scanNumber() {
 }
 
 func (s *Scanner) scanString() {
-	for s.Peek() != '"' && !s.isAtEnd() {
-		if s.Peek() == '\n' {
-			s.line++
-		}
-		s.Next()
-	}
-
+	s.scanUntil('"')
 	if s.isAtEnd() {
 		reportError(s.line, "Unterminated string.")
 		return
 	}
 
-	// Consume then closing `"`
+	// Consume the closing double-quote and return string excluding quotes
 	s.Next()
-
-	// Trim the surrounding quotes
 	str := s.source[s.start+1 : s.current-1]
 	s.addTokenLiteral(STRING, str)
+}
+
+func (s *Scanner) scanUntil(until rune) {
+	for s.Peek() != until && !s.isAtEnd() {
+		s.Next()
+	}
 }
 
 func isAlpha(ch rune) bool {

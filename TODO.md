@@ -1,3 +1,4 @@
+ - adapt https://golang.org/pkg/go/scanner/
  - pass []Token to NewLexer?
  - mixed case token constants
  - lexer EOF bool?

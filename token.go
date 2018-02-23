@@ -56,6 +56,7 @@ const (
 	VAR
 	WHILE
 
+	COMMENT
 	EOF
 	TOKEN_COUNT
 )
