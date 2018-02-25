@@ -8,10 +8,6 @@ import (
 	"os"
 )
 
-const (
-	ErrCompile = iota + 65
-)
-
 var hadError = false
 
 func run(source []byte, filename string) {
