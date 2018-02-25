@@ -56,9 +56,9 @@ const (
 	VAR
 	WHILE
 
+	// Special
 	COMMENT
 	EOF
-	TOKEN_COUNT
 )
 
 type Token struct {
@@ -66,6 +66,7 @@ type Token struct {
 	lexeme  []byte
 	literal Literal
 	line    int
+	col     int
 }
 
 func (t Token) String() string {

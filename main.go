@@ -14,17 +14,8 @@ const (
 
 var hadError = false
 
-func report(line int, where string, message string) {
-	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
-	hadError = true
-}
-
-func reportError(line int, message string) {
-	report(line, "", message)
-}
-
-func run(source []byte) {
-	tokens := NewScanner(source).ScanAll()
+func run(source []byte, filename string) {
+	tokens := NewScanner(source, filename).ScanAll()
 	for _, token := range tokens {
 		if token.kind != EOF {
 			fmt.Printf("%v\n", token)
@@ -34,7 +25,7 @@ func run(source []byte) {
 
 func runFile(path string) {
 	bytes, _ := ioutil.ReadFile(path)
-	run(bytes)
+	run(bytes, path)
 }
 
 func repl() {
@@ -47,7 +38,7 @@ func repl() {
 			break
 		}
 
-		run(bytes)
+		run(bytes, "repl")
 		// if bytes[0] != '\n' {
 		// 	run(bytes)
 		// }

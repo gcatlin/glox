@@ -12,25 +12,27 @@ const NUL = 0
 
 type Scanner struct {
 	current   int
-	start     int // remove if we slice scanner.source?
+	start     int
 	line      int
+	col       int
 	sourceLen int
+	filename  string
 	source    []byte
 	tokens    []Token
 }
 
-func NewScanner(source []byte) *Scanner {
+func NewScanner(source []byte, filename string) *Scanner {
 	return &Scanner{
 		current:   0,
 		start:     0,
 		line:      1,
+		col:       0,
+		filename:  filename,
 		sourceLen: len(source),
 		source:    source,
 		tokens:    make([]Token, 0, 256),
 	}
 }
-
-// func (s *Scanner) error()
 
 func (s *Scanner) addToken(kind TokenKind) {
 	s.addTokenLiteral(kind, nil)
@@ -38,7 +40,9 @@ func (s *Scanner) addToken(kind TokenKind) {
 
 func (s *Scanner) addTokenLiteral(kind TokenKind, literal Literal) {
 	lexeme := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, Token{kind: kind, lexeme: lexeme, line: s.line})
+	token := Token{kind: kind, lexeme: lexeme, line: s.line, literal: literal}
+	// s.info(&token)
+	s.tokens = append(s.tokens, token)
 }
 
 func (s *Scanner) addTokenFor(ch rune, matched TokenKind, unmatched TokenKind) {
@@ -47,6 +51,29 @@ func (s *Scanner) addTokenFor(ch rune, matched TokenKind, unmatched TokenKind) {
 	} else {
 		s.addToken(unmatched)
 	}
+}
+
+func (s *Scanner) getLine(line int) string {
+	found := false
+	start, i, lines := 0, 0, 1
+	for ; i < s.sourceLen; i++ {
+		if !found && lines == line {
+			found = true
+			start = i
+		}
+		if s.source[i] == '\n' {
+			if found {
+				break
+			}
+			lines++
+		}
+	}
+	return string(s.source[start:i])
+}
+
+func (s *Scanner) info(tok *Token) {
+	len := len(tok.lexeme)
+	reportInfo(s.filename, s.line, s.col-len, len, s.getLine(s.line), tok.String())
 }
 
 func (s *Scanner) isAtEnd() bool {
@@ -58,16 +85,21 @@ func (s *Scanner) match(expected rune) bool {
 		return false
 	}
 
-	s.current++ // slice s.source?
+	s.current++
+	s.col++
 	return true
 }
 
 func (s *Scanner) Next() rune {
 	ch := s.readRune(s.current)
-	s.current++ // slice s.source?
+	s.current++
 	if ch == '\n' {
 		s.line++
+		s.col = 0
+	} else {
+		s.col++
 	}
+
 	return ch
 }
 
@@ -140,7 +172,8 @@ func (s *Scanner) Scan() {
 		} else if isAlpha(ch) {
 			s.scanIdentifier()
 		} else {
-			reportError(s.line, "Unexpected character:"+string(ch))
+			reportError(s.filename, s.line, s.col, 1, s.getLine(s.line),
+				"Unexpected character:"+string(ch))
 			// exit
 		}
 	}
@@ -148,7 +181,7 @@ func (s *Scanner) Scan() {
 
 func (s *Scanner) ScanAll() []Token {
 	for !s.isAtEnd() {
-		s.start = s.current // remove if we slice s.source?
+		s.start = s.current
 		s.Scan()
 	}
 
@@ -166,8 +199,8 @@ func (s *Scanner) scanIdentifier() {
 		s.Next()
 	}
 
-	lexeme := s.source[s.start:s.current]
-	kind, ok := Keywords[string(lexeme)]
+	lexeme := string(s.source[s.start:s.current])
+	kind, ok := Keywords[lexeme]
 	if !ok {
 		kind = IDENTIFIER
 	}
@@ -197,7 +230,8 @@ func (s *Scanner) scanNumber() {
 func (s *Scanner) scanString() {
 	s.scanUntil('"')
 	if s.isAtEnd() {
-		reportError(s.line, "Unterminated string.")
+		reportError(s.filename, s.line, s.col, 1, s.getLine(s.line),
+			"Unterminated string.")
 		return
 	}
 
