@@ -7,8 +7,10 @@ type Literal interface{}
 type TokenKind int
 
 const (
-	// EOF = -(iota+1)
+	// Special tokens
 	ILLEGAL TokenKind = iota
+	EOF
+	COMMENT
 
 	// Single-character tokens
 	LEFT_PAREN  // (
@@ -43,7 +45,7 @@ const (
 	CLASS
 	ELSE
 	FALSE
-	FUN
+	FN
 	FOR
 	IF
 	NIL
@@ -55,10 +57,6 @@ const (
 	TRUE
 	VAR
 	WHILE
-
-	// Special
-	COMMENT
-	EOF
 )
 
 type Token struct {
@@ -80,7 +78,7 @@ var Keywords = map[string]TokenKind{
 	"else":   ELSE,
 	"false":  FALSE,
 	"for":    FOR,
-	"fun":    FUN,
+	"fn":     FN,
 	"if":     IF,
 	"nil":    NIL,
 	"or":     OR,
