@@ -7,7 +7,6 @@ import (
 )
 
 type Expr interface {
-	// String() string
 	Accept(v Visitor) string
 }
 
@@ -28,7 +27,6 @@ func (s StringLiteral) String() string {
 }
 
 type Visitor interface {
-	// Visit(expr Expr) (v Visitor)
 	visitBinaryExpr(expr BinaryExpr) string
 	visitGroupingExpr(expr GroupingExpr) string
 	visitLiteralExpr(expr LiteralExpr) string
