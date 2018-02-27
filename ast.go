@@ -76,15 +76,7 @@ func (p AstPrinter) Print(expr Expr) {
 }
 
 func (p AstPrinter) parenthesize(name []byte, exprs ...Expr) string {
-	// var b strings.Builder
-	// for expr, _ := range exprs {
-	// fmt.Fprintf(&b, "%d...", i)
-	// }
-	// b.WriteString("ignition")
-	// fmt.Println(b.String())
-
 	var b strings.Builder
-	b.Grow(1024)
 
 	b.WriteByte('(')
 	b.Write(name)
