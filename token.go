@@ -2,7 +2,9 @@ package main
 
 // http://www.craftinginterpreters.com/scanning.html#lexeme-type
 
-type Literal interface{}
+type Literal interface {
+	String() string
+}
 
 type TokenKind int
 

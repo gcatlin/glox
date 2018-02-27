@@ -43,6 +43,16 @@ func repl() {
 }
 
 func main() {
+	expr := BinaryExpr{
+		lhs: UnaryExpr{
+			op:  Token{kind: STAR, lexeme: []byte("-")},
+			rhs: LiteralExpr{value: IntLiteral(123)}},
+		op:  Token{kind: STAR, lexeme: []byte("*")},
+		rhs: GroupingExpr{expr: LiteralExpr{value: FloatLiteral(45.67)}},
+	}
+	var p AstPrinter
+	p.Print(expr)
+
 	args := os.Args[1:]
 	if len(args) == 0 {
 		repl()

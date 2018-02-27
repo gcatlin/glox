@@ -224,7 +224,7 @@ func (s *Scanner) scanNumber() {
 
 	// TODO error handling
 	float, _ := strconv.ParseFloat(string(s.source[s.start:s.current]), 64)
-	s.addTokenLiteral(NUMBER, float)
+	s.addTokenLiteral(NUMBER, FloatLiteral(float))
 }
 
 func (s *Scanner) scanString() {
@@ -238,7 +238,7 @@ func (s *Scanner) scanString() {
 	// Consume the closing double-quote and return string excluding quotes
 	s.Next()
 	str := s.source[s.start+1 : s.current-1]
-	s.addTokenLiteral(STRING, str)
+	s.addTokenLiteral(STRING, StringLiteral(str))
 }
 
 func (s *Scanner) scanUntil(until rune) {
