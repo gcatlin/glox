@@ -12,11 +12,19 @@ var hadError = false
 
 func run(source []byte, filename string) {
 	tokens := NewScanner(source, filename).ScanAll()
-	for _, token := range tokens {
-		if token.kind != EOF {
-			fmt.Printf("%v\n", token)
-		}
+	if tokens[0].kind == EOF {
+		return
 	}
+
+	parser := &Parser{current: 0, tokens: tokens}
+	expr := parser.Parse()
+
+	if hadError {
+		return
+	}
+
+	var p AstPrinter
+	p.Print(expr)
 }
 
 func runFile(path string) {
@@ -43,16 +51,6 @@ func repl() {
 }
 
 func main() {
-	expr := BinaryExpr{
-		lhs: UnaryExpr{
-			op:  Token{kind: STAR, lexeme: []byte("-")},
-			rhs: LiteralExpr{value: IntLiteral(123)}},
-		op:  Token{kind: STAR, lexeme: []byte("*")},
-		rhs: GroupingExpr{expr: LiteralExpr{value: FloatLiteral(45.67)}},
-	}
-	var p AstPrinter
-	p.Print(expr)
-
 	args := os.Args[1:]
 	if len(args) == 0 {
 		repl()

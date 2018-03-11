@@ -54,26 +54,23 @@ func (s *Scanner) addTokenFor(ch rune, matched TokenKind, unmatched TokenKind) {
 }
 
 func (s *Scanner) getLine(line int) string {
-	found := false
-	start, i, lines := 0, 0, 1
-	for ; i < s.sourceLen; i++ {
-		if !found && lines == line {
-			found = true
-			start = i
-		}
-		if s.source[i] == '\n' {
-			if found {
-				break
-			}
-			lines++
+	pos, start, end := 0, 0, s.sourceLen-1
+	for line--; line != 0; line-- {
+		for s.source[pos] != '\n' && pos < end {
+			pos++
 		}
 	}
-	return string(s.source[start:i])
+	for start = pos; pos < end; pos++ {
+		if s.source[pos] == '\n' {
+			break
+		}
+	}
+	return string(s.source[start:end])
 }
 
 func (s *Scanner) info(tok *Token) {
 	len := len(tok.lexeme)
-	reportInfo(s.filename, s.line, s.col-len, len, s.getLine(s.line), tok.String())
+	reportInfo(s.filename, s.line, s.col-len, len, s.getLine(s.line), tok.kind.String())
 }
 
 func (s *Scanner) isAtEnd() bool {
@@ -172,8 +169,8 @@ func (s *Scanner) Scan() {
 		} else if isAlpha(ch) {
 			s.scanIdentifier()
 		} else {
-			reportError(s.filename, s.line, s.col, 1, s.getLine(s.line),
-				"Unexpected character:"+string(ch))
+			reportError(s.filename, s.line, s.col-1, 1, s.getLine(s.line),
+				"Unexpected character: '"+string(ch)+"'")
 			// exit
 		}
 	}
