@@ -16,7 +16,7 @@ func run(source []byte, filename string) {
 		return
 	}
 
-	parser := &Parser{current: 0, tokens: tokens}
+	parser := &Parser{current: 0, filename: filename, source: source, tokens: tokens}
 	expr := parser.Parse()
 
 	if hadError {
@@ -43,9 +43,6 @@ func repl() {
 		}
 
 		run(bytes, "repl")
-		// if bytes[0] != '\n' {
-		// 	run(bytes)
-		// }
 		hadError = false
 	}
 }

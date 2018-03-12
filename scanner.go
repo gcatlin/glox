@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"unicode"
 	"unicode/utf8"
@@ -40,7 +41,8 @@ func (s *Scanner) addToken(kind TokenKind) {
 
 func (s *Scanner) addTokenLiteral(kind TokenKind, literal Literal) {
 	lexeme := s.source[s.start:s.current]
-	token := Token{kind: kind, lexeme: lexeme, line: s.line, literal: literal}
+	col := s.col - len(lexeme)
+	token := Token{kind: kind, lexeme: lexeme, line: s.line, col: col, literal: literal}
 	// s.info(&token)
 	s.tokens = append(s.tokens, token)
 }
@@ -53,24 +55,39 @@ func (s *Scanner) addTokenFor(ch rune, matched TokenKind, unmatched TokenKind) {
 	}
 }
 
-func (s *Scanner) getLine(line int) string {
-	pos, start, end := 0, 0, s.sourceLen-1
-	for line--; line != 0; line-- {
-		for s.source[pos] != '\n' && pos < end {
-			pos++
+func (s *Scanner) err(pos, len int, message string) {
+	line, col, src := s.getLineInfo(pos)
+	reportError(s.filename, line, col, len, src, "[scanner] "+message)
+}
+
+func (s *Scanner) getLineInfo(pos int) (line, col int, src string) {
+	line, start, end := 1, 0, s.sourceLen
+	if pos > end {
+		panic(fmt.Sprintf(ANSI_RESET+"pos (%d) out of bounds (0, %d)", pos, end))
+	}
+
+	// Find line number and start of line
+	for i := 0; i < pos; i++ {
+		if s.source[i] == '\n' {
+			line++
+			start = i + 1
 		}
 	}
-	for start = pos; pos < end; pos++ {
-		if s.source[pos] == '\n' {
+
+	// Find end of line
+	for j := pos; j < end; j++ {
+		if s.source[j] == '\n' {
+			end = j
 			break
 		}
 	}
-	return string(s.source[start:end])
+
+	return line, pos - start, string(s.source[start:end])
 }
 
 func (s *Scanner) info(tok *Token) {
-	len := len(tok.lexeme)
-	reportInfo(s.filename, s.line, s.col-len, len, s.getLine(s.line), tok.kind.String())
+	line, col, src := s.getLineInfo(s.start)
+	reportInfo(s.filename, line, col, len(tok.lexeme), src, "[scanner] "+tok.kind.String())
 }
 
 func (s *Scanner) isAtEnd() bool {
@@ -169,8 +186,7 @@ func (s *Scanner) Scan() {
 		} else if isAlpha(ch) {
 			s.scanIdentifier()
 		} else {
-			reportError(s.filename, s.line, s.col-1, 1, s.getLine(s.line),
-				"Unexpected character: '"+string(ch)+"'")
+			s.err(s.start, 1, "Unexpected character: '"+string(ch)+"'")
 			// exit
 		}
 	}
@@ -227,8 +243,8 @@ func (s *Scanner) scanNumber() {
 func (s *Scanner) scanString() {
 	s.scanUntil('"')
 	if s.isAtEnd() {
-		reportError(s.filename, s.line, s.col, 1, s.getLine(s.line),
-			"Unterminated string.")
+		// -1 to remove trailing newline / EOF
+		s.err(s.start, s.current-s.start-1, "Unterminated string.")
 		return
 	}
 

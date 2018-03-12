@@ -7,8 +7,10 @@ const (
 )
 
 type Parser struct {
-	current int
-	tokens  []Token
+	current  int
+	filename string
+	source   []byte
+	tokens   []Token
 }
 
 func (p *Parser) addition() Expr {
@@ -46,7 +48,7 @@ func (p *Parser) consume(kind TokenKind, message string) Token {
 	if p.check(kind) {
 		return p.advance()
 	}
-	panic(p.error(p.peek(), message))
+	panic(p.err(p.peek(), message))
 }
 
 func (p *Parser) equality() Expr {
@@ -59,15 +61,32 @@ func (p *Parser) equality() Expr {
 	return expr
 }
 
-func (p *Parser) error(token Token, message string) Err {
-	filename := "filename goes here"
-	srcLine := "source line goes here"
-	reportError(filename, token.line, token.col, len(token.lexeme), srcLine, message)
+func (p *Parser) err(token Token, message string) Err {
+	reportError(p.filename, token.line, token.col, len(token.lexeme), p.getLine(token),
+		"[parser] "+message)
 	return ParseError
 }
 
 func (p *Parser) expression() Expr {
 	return p.equality()
+}
+
+func (p *Parser) getLine(token Token) string {
+	// Find start of line
+	start, end := 0, len(p.source)
+	for i := token.line - 1; i > 0; i-- {
+		for p.source[start] != '\n' {
+			start++
+		}
+	}
+	// Find end of line
+	for j := start; j < end; j++ {
+		if p.source[j] == '\n' {
+			end = j
+			break
+		}
+	}
+	return string(p.source[start:end])
 }
 
 func (p *Parser) isAtEnd() bool {
@@ -131,7 +150,7 @@ func (p *Parser) primary() Expr {
 		return GroupingExpr{expr}
 	}
 
-	panic(p.error(p.peek(), "Expected an expression."))
+	panic(p.err(p.peek(), "Expected an expression."))
 }
 
 func (p *Parser) synchronize() {
