@@ -42,7 +42,7 @@ func repl() {
 			break
 		}
 
-		run(bytes, "repl")
+		run(bytes, "?")
 		hadError = false
 	}
 }

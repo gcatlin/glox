@@ -1,3 +1,4 @@
+ - incorporate Go's File, FileSet, and Position types
  - CI chapter 6 challenges
     - comma operator
     - ternary operator

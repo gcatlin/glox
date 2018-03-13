@@ -23,6 +23,8 @@ type Token struct {
 	literal Literal
 	line    int
 	col     int
+	// pos     start
+	// pos     end
 }
 
 func (t Token) String() string {

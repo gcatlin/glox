@@ -14,10 +14,10 @@ const NUL = 0
 type Scanner struct {
 	current   int
 	start     int
-	line      int
-	col       int
+	line      int // replace w/ pos
+	col       int // replace w/ pos
 	sourceLen int
-	filename  string
+	filename  string // replace w/ FileSet?
 	source    []byte
 	tokens    []Token
 }
@@ -42,7 +42,7 @@ func (s *Scanner) addToken(kind TokenKind) {
 func (s *Scanner) addTokenLiteral(kind TokenKind, literal Literal) {
 	lexeme := s.source[s.start:s.current]
 	col := s.col - len(lexeme)
-	token := Token{kind: kind, lexeme: lexeme, line: s.line, col: col, literal: literal}
+	token := Token{kind: kind, lexeme: lexeme, literal: literal, line: s.line, col: col}
 	// s.info(&token)
 	s.tokens = append(s.tokens, token)
 }
